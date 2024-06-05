@@ -1,4 +1,4 @@
-﻿@page "/k/{mid:int}"
+﻿@page "/k/{mid:int?}"
 @using Blazor_MSIT158_2.Models
 @inject NavigationManager NavigationManager
 @code
@@ -199,7 +199,7 @@
     <div class="container">
         <!-- row -->
         <div class="row">
-            <F運送1></F運送1>
+            <F運送1 mid="mid"></F運送1>
             @*  <F臨時首頁1 mid="mid" 重整1="重整0"></F臨時首頁1> *@
         </div>
         <!-- /row -->

@@ -18,17 +18,17 @@
     }
 }
 @{
-    var a = db.TCarts.Where(x => x.MemberId == mid);
-    int b = Convert.ToInt32(a.Sum(x => x.Qty));
-    var c = a.Join(db.TProducts, x => x.ProductId, y => y.ProductId, (x, y) => new { y.ProductPhoto, y.ProductName, y.UnitPrice, y.Stocks, x.Qty, x.CartId, x.Checking });
-    int p = Convert.ToInt32(c.Sum(x => x.Qty * x.UnitPrice));
-    if (!a.All(x => (bool)x.Checking)) sed = false;
+    var 會員購物車 = db.TCarts.Where(x => x.MemberId == mid);
+    int 總數 = Convert.ToInt32(會員購物車.Sum(x => x.Qty));
+    var 購物車詳細 = 會員購物車.Join(db.TProducts, x => x.ProductId, y => y.ProductId, (x, y) => new { y.ProductPhoto, y.ProductName, y.UnitPrice, y.Stocks, x.Qty, x.CartId, x.Checking });
+    int 總價 = Convert.ToInt32(購物車詳細.Sum(x => x.Qty * x.UnitPrice));
+    if (!會員購物車.All(x => (bool)x.Checking)) sed = false;
     else sed = true;
     void 全選()
     {
-        if (!a.All(x => (bool)x.Checking))
+        if (!會員購物車.All(x => (bool)x.Checking))
         {
-            foreach (var v in a)
+            foreach (var v in 會員購物車)
             {
                 v.Checking = true;
             }
@@ -36,7 +36,7 @@
         }
         else
         {
-            foreach (var v in a)
+            foreach (var v in 會員購物車)
             {
                 v.Checking = false;
             }
@@ -146,7 +146,7 @@
                 </thead>
                 <tbody>
                     @{
-                        foreach (var item in c)
+                        foreach (var item in 購物車詳細)
                         {
                             <tr>
                                 <th scope="row">
@@ -206,7 +206,7 @@
                         <h1 class="display-6 mb-4">購物車 <span class="fw-normal">總價</span></h1>
                         <div class="d-flex justify-content-between mb-4">
                             <h5 class="mb-0 me-4">小計:</h5>
-                            <p class="mb-0">$@p</p>
+                            <p class="mb-0">$@總價</p>
                         </div>
                         <div class="d-flex justify-content-between">
                             <h5 class="mb-0 me-4">運費</h5>
@@ -218,7 +218,7 @@
                     </div>
                     <div class="py-4 mb-4 border-top border-bottom d-flex justify-content-between">
                         <h5 class="mb-0 ps-4 me-4">總共</h5>
-                        <p class="mb-0 pe-4">$@(p+運費)</p>
+                        <p class="mb-0 pe-4">$@(總價+運費)</p>
                     </div>
                     <div style="text-align:right">
                     <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">選擇運送方式</button>

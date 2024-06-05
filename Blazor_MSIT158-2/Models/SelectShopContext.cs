@@ -324,6 +324,9 @@ public partial class SelectShopContext : DbContext
             entity.Property(e => e.MemberId).HasColumnName("MemberID");
             entity.Property(e => e.OrderDate).HasColumnType("datetime");
             entity.Property(e => e.RecMemberId).HasColumnName("RecMemberID");
+            entity.Property(e => e.RecipientEamil).HasMaxLength(50);
+            entity.Property(e => e.RecipientName).HasMaxLength(50);
+            entity.Property(e => e.RecipientPhone).HasMaxLength(50);
             entity.Property(e => e.ShippingMethodId).HasColumnName("Shipping_MethodID");
             entity.Property(e => e.StatusId).HasColumnName("StatusID");
             entity.Property(e => e.StoreName).HasMaxLength(50);

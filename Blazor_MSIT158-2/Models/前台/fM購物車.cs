@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Net;
+using System.Security.Cryptography;
 
 namespace Blazor_MSIT158_2.Models;
 
@@ -56,6 +57,24 @@ public class fM購物車
 		{
 			if((bool)x.Checking)db.Remove(x);
 		}
+        db.SaveChanges();
+    }
+	 public void 結帳(TOrder o)
+    {
+        SelectShopContext db = new SelectShopContext();      
+        db.TOrders.Add(o);
+        db.SaveChanges();    
+		int lo = db.TOrders.OrderBy(x=>x.OrderId).FirstOrDefault().OrderId;
+        var a = db.TCarts.Where(x=>x.MemberId==o.MemberId);
+		foreach (var x in a)
+		{
+			TPurchase p = new TPurchase();
+			p.OrderId = lo;
+			p.ProductId = x.ProductId;
+			p.Qty = x.Qty;
+			db.TPurchases.Add(p);
+            db.TCarts.Remove(x);
+        }		
         db.SaveChanges();
     }
 }

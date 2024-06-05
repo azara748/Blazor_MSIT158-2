@@ -1,16 +1,51 @@
 ﻿@using Blazor_MSIT158_2.Models
 @using Blazor_MSIT158_2.Models.前台
 @using System.Text.Json
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 @page "/k2"
 @code {
+    [Parameter]
+    public int mid { get; set; }
     fM全台縣市 c = new fM全台縣市();
     protected override async Task OnInitializedAsync()
     {
         var jsonData = File.ReadAllText("wwwroot/全台縣市.json");
         c = JsonSerializer.Deserialize<fM全台縣市>(jsonData);
     }
-}
+    string 縣市 = "臺北市";
+    string 區域 ="大安區";
+    string 地址 = "";
+    SelectShopContext db = new SelectShopContext();
+    int 運費 = 100;
+    string 電話="";
+    string 姓名 = "";
+    string 信箱 = "";
+    void 結帳()
+    {
+        NavigationManager.NavigateTo($"/");
+        JS.InvokeVoidAsync("alert", "開始結帳");
+        TOrder o = new TOrder();
+        o.OrderDate = DateTime.Now;
+        o.StatusId = 1;
+        o.City = 縣市;
+        o.District = 區域;
+        o.Address = 地址;
+        o.RecipientEamil = 信箱;
+        o.RecipientName = 姓名;
+        o.RecipientPhone = 電話;
+        o.ShippingMethodId = 1;
+        o.MemberId = mid;
+      
 
+        new fM購物車().結帳(o);
+    }
+}
+@{
+    var 會員購物車 = db.TCarts.Where(x => x.MemberId == mid);
+    var 購物車詳細 = 會員購物車.Join(db.TProducts, x => x.ProductId, y => y.ProductId, (x, y) => new { y.ProductPhoto, y.ProductName, y.UnitPrice, y.Stocks, x.Qty, x.CartId, x.Checking });
+    int 總價 = Convert.ToInt32(購物車詳細.Sum(x => x.Qty * x.UnitPrice));
+}
 <!-- SECTION -->
 <div class="section">
     <!-- container -->
@@ -25,27 +60,34 @@
                         <h3 class="title">運送地址</h3>
                     </div>
                     <div class="form-group">
-                        <input class="input" type="text" name="first-name" placeholder="姓名">
+                        <input class="input" type="text" name="first-name" placeholder="姓名" @bind="姓名">
                     </div>
                     <div class="form-group">
-                        <input class="input" type="email" name="email" placeholder="Email">
+                        <input class="input" type="email" name="email" placeholder="Email" @bind="信箱">
                     </div>
                     <div class="form-group">
-                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%">
+                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="縣市">
                             @{
                                 foreach (var v in c.data)
                                 {
-                                    <option value="1">@v.name</option>
+                                    <option>@v.name</option>
                                 }
                             }
                         </select>
-
+                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="區域">
+                            @{
+                                foreach (var v in c.data.FirstOrDefault(x => x.name == 縣市).districts)
+                                {
+                                    <option>@v.name</option>
+                                }
+                            }
+                        </select>
                     </div>
                     <div class="form-group">
-                        <input class="input" type="text" name="address" placeholder="地址">
+                        <input class="input" type="text" name="address" placeholder="地址" @bind="地址">
                     </div>
                     <div class="form-group">
-                        <input class="input" type="tel" name="tel" placeholder="連絡電話">
+                        <input class="input" type="tel" name="tel" placeholder="連絡電話" @bind="電話">
                     </div>
                     <div class="form-group">
                         <div class="input-checkbox">
@@ -59,7 +101,7 @@
                 </div>
                 <!-- /Billing Details -->
                 <!-- Shiping Details -->
-                <div class="shiping-details">
+                @* <div class="shiping-details">
                     <div class="section-title">
                         <h3 class="title">收件人地址</h3>
                     </div>
@@ -77,14 +119,32 @@
                                 <input class="input" type="email" name="email" placeholder="Email">
                             </div>
                             <div class="form-group">
-                                <input class="input" type="text" name="address" placeholder="Address">
+                                <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="縣市">
+                                    @{
+                                        foreach (var v in c.data)
+                                        {
+                                            <option>@v.name</option>
+                                        }
+                                    }
+                                </select>
+                                <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="區域">
+                                    @{
+                                        foreach (var v in c.data.FirstOrDefault(x => x.name == 縣市).districts)
+                                        {
+                                            <option>@v.name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <input class="input" type="text" name="address" placeholder="Address" value="">
                             </div>
                             <div class="form-group">
                                 <input class="input" type="tel" name="tel" placeholder="電話">
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> *@
                 <!-- /Shiping Details -->
                 <!-- Order notes -->
                 <div class="order-notes">
@@ -96,72 +156,33 @@
             <!-- Order Details -->
             <div class="col-md-5 order-details">
                 <div class="section-title text-center">
-                    <h3 class="title">Your Order</h3>
+                    <h3 class="title">您的商品</h3>
                 </div>
                 <div class="order-summary">
                     <div class="order-col">
-                        <div><strong>PRODUCT</strong></div>
-                        <div><strong>TOTAL</strong></div>
+                        <div><strong>商品</strong></div>
+                        <div><strong>金額</strong></div>
                     </div>
+                    @{
+                        foreach (var item in 購物車詳細)
+                        {
                     <div class="order-products">
                         <div class="order-col">
-                            <div>1x Product Name Goes Here</div>
-                            <div>$980.00</div>
+                            <div>@item.Qty x @item.ProductName</div>
+                                    <div>@Convert.ToInt32(item.UnitPrice)</div>
+                        </div>              
                         </div>
-                        <div class="order-col">
-                            <div>2x Product Name Goes Here</div>
-                            <div>$980.00</div>
-                        </div>
+                        }}
+                    <div class="order-col">
+                        <div>運費</div>
+                                    <div><strong>@運費</strong></div>
                     </div>
                     <div class="order-col">
-                        <div>Shiping</div>
-                        <div><strong>FREE</strong></div>
+                        <div><strong>總計</strong></div>
+                        <div><strong class="order-total">$@(總價+運費)</strong></div>
                     </div>
-                    <div class="order-col">
-                        <div><strong>TOTAL</strong></div>
-                        <div><strong class="order-total">$2940.00</strong></div>
-                    </div>
-                </div>
-                <div class="payment-method">
-                    <div class="input-radio">
-                        <input type="radio" name="payment" id="payment-1">
-                        <label for="payment-1">
-                            <span></span>
-                            Direct Bank Transfer
-                        </label>
-                        <div class="caption">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        </div>
-                    </div>
-                    <div class="input-radio">
-                        <input type="radio" name="payment" id="payment-2">
-                        <label for="payment-2">
-                            <span></span>
-                            Cheque Payment
-                        </label>
-                        <div class="caption">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        </div>
-                    </div>
-                    <div class="input-radio">
-                        <input type="radio" name="payment" id="payment-3">
-                        <label for="payment-3">
-                            <span></span>
-                            Paypal System
-                        </label>
-                        <div class="caption">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-checkbox">
-                    <input type="checkbox" id="terms">
-                    <label for="terms">
-                        <span></span>
-                        I've read and accept the <a href="#">terms & conditions</a>
-                    </label>
-                </div>
-                <a href="#" class="primary-btn order-submit">Place order</a>
+                </div>                                      
+                <a href="#" class="primary-btn order-submit" @onclick="結帳">選擇付款方式</a>
             </div>
             <!-- /Order Details -->
         </div>
