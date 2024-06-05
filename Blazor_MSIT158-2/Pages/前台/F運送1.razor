@@ -21,31 +21,32 @@
     string 電話="";
     string 姓名 = "";
     string 信箱 = "";
-    void 結帳()
-    {
-        NavigationManager.NavigateTo($"/");
-        JS.InvokeVoidAsync("alert", "開始結帳");
-        TOrder o = new TOrder();
-        o.OrderDate = DateTime.Now;
-        o.StatusId = 1;
-        o.City = 縣市;
-        o.District = 區域;
-        o.Address = 地址;
-        o.RecipientEamil = 信箱;
-        o.RecipientName = 姓名;
-        o.RecipientPhone = 電話;
-        o.ShippingMethodId = 1;
-        o.MemberId = mid;
+    // void 結帳()
+    // {
+    //     NavigationManager.NavigateTo($"/");
+    //     JS.InvokeVoidAsync("alert", "開始結帳");
+    //     TOrder o = new TOrder();
+    //     o.OrderDate = DateTime.Now;
+    //     o.StatusId = 1;
+    //     o.City = 縣市;
+    //     o.District = 區域;
+    //     o.Address = 地址;
+    //     o.RecipientEamil = 信箱;
+    //     o.RecipientName = 姓名;
+    //     o.RecipientPhone = 電話;
+    //     o.ShippingMethodId = 1;
+    //     o.MemberId = mid;
       
 
-        new fM購物車().結帳(o);
-    }
+    //     new fM購物車().結帳(o);
+    // }
 }
 @{
     var 會員購物車 = db.TCarts.Where(x => x.MemberId == mid);
     var 購物車詳細 = 會員購物車.Join(db.TProducts, x => x.ProductId, y => y.ProductId, (x, y) => new { y.ProductPhoto, y.ProductName, y.UnitPrice, y.Stocks, x.Qty, x.CartId, x.Checking });
     int 總價 = Convert.ToInt32(購物車詳細.Sum(x => x.Qty * x.UnitPrice));
 }
+<input  type="hidden" value="@mid" id="mid"/>
 <!-- SECTION -->
 <div class="section">
     <!-- container -->
@@ -197,7 +198,8 @@
                             "recipienteamil": sele6.value,
                             "recipientname": sele5.value,
                             "recipientphone": sele4.value,
-                            "shippingmethodId":1
+                            "shippingmethodId":1,
+                            "memberid": mid.value
                         }
                         console.log(Data)
                         var a = await fetch(`https://localhost:7160/api/F31`,
