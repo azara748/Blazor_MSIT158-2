@@ -60,34 +60,34 @@
                         <h3 class="title">運送地址</h3>
                     </div>
                     <div class="form-group">
-                        <input class="input" type="text" name="first-name" placeholder="姓名" @bind="姓名">
+                        <input class="input" type="text" name="first-name" placeholder="姓名" @bind="姓名" id="sele5">
                     </div>
                     <div class="form-group">
-                        <input class="input" type="email" name="email" placeholder="Email" @bind="信箱">
+                        <input class="input" type="email" name="email" placeholder="Email" @bind="信箱" id="sele6">
                     </div>
                     <div class="form-group">
-                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="縣市">
+                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="縣市" id="sele1">
                             @{
                                 foreach (var v in c.data)
                                 {
-                                    <option>@v.name</option>
+                                        <option>@v.name</option>
                                 }
                             }
                         </select>
-                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="區域">
+                        <select class="form-select form-select-lg mb-3" aria-label="Large select example" style="font-size:16px;width:30%;float:left" @bind="區域" id="sele2">
                             @{
                                 foreach (var v in c.data.FirstOrDefault(x => x.name == 縣市).districts)
                                 {
-                                    <option>@v.name</option>
+                                        <option>@v.name</option>
                                 }
                             }
                         </select>
                     </div>
                     <div class="form-group">
-                        <input class="input" type="text" name="address" placeholder="地址" @bind="地址">
+                        <input class="input" type="text" name="address" placeholder="地址" @bind="地址" id="sele3">
                     </div>
                     <div class="form-group">
-                        <input class="input" type="tel" name="tel" placeholder="連絡電話" @bind="電話">
+                        <input class="input" type="tel" name="tel" placeholder="連絡電話" @bind="電話" id="sele4">
                     </div>
                     <div class="form-group">
                         <div class="input-checkbox">
@@ -166,12 +166,12 @@
                     @{
                         foreach (var item in 購物車詳細)
                         {
-                    <div class="order-products">
-                        <div class="order-col">
-                            <div>@item.Qty x @item.ProductName</div>
-                                    <div>@Convert.ToInt32(item.UnitPrice)</div>
-                        </div>              
-                        </div>
+                        <div class="order-products">
+                            <div class="order-col">
+                                <div>@item.Qty x @item.ProductName</div>
+                                        <div>@Convert.ToInt32(item.UnitPrice)</div>
+                            </div>              
+                            </div>
                         }}
                     <div class="order-col">
                         <div>運費</div>
@@ -182,7 +182,35 @@
                         <div><strong class="order-total">$@(總價+運費)</strong></div>
                     </div>
                 </div>                                      
-                <a href="#" class="primary-btn order-submit" @onclick="結帳">選擇付款方式</a>
+                <a href="" class="primary-btn order-submit" onclick="結帳()">選擇付款方式</a>
+                <script>
+                   async function 結帳()
+                    {                      
+                        var d = new Date()
+                        d.setHours(d.getHours() + 8)
+                        var Data = {
+                            "orderDate": d,
+                            "statusId": 1,
+                            "city": sele1.value,
+                            "district": sele2.value,
+                            "address": sele3.value,
+                            "recipienteamil": sele6.value,
+                            "recipientname": sele5.value,
+                            "recipientphone": sele4.value,
+                            "shippingmethodId":1
+                        }
+                        console.log(Data)
+                        var a = await fetch(`https://localhost:7160/api/F31`,
+                                         {
+                            method: 'POST',
+                            body: JSON.stringify(Data),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                        })
+                        window.alert("ok")
+                    }
+                </script>
             </div>
             <!-- /Order Details -->
         </div>

@@ -11,6 +11,11 @@
     }
     SelectShopContext db = new SelectShopContext();
 }
+@code {
+    bool s = false;
+    void show() { s = !s; }
+    //void 重整0() {  }
+}
 <head>
 
     <meta charset="utf-8" />
@@ -93,12 +98,7 @@
                             </a>
                         </div>
                         <!-- /Wishlist -->
-                        <!-- Cart -->
-                        @code {
-                            bool s = false;
-                            void show() { s = !s; }
-                            //void 重整0() {  }
-                        }
+                        <!-- Cart -->                     
                         <div class="dropdown open" @onclick="show">
                             <a class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="true">
                                 <i class="fa fa-shopping-cart"></i>

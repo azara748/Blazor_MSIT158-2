@@ -5,9 +5,9 @@
 @code {
     [Parameter]
     public int mid { get; set; }
-    // [Parameter]
-    // public EventCallback 重整1 { get; set; }
-    IEnumerable<TProduct> a = new SelectShopContext().TProducts.Where(x=>x.SubCategoryId==2);   
+    new Random r = new Random();
+    static int spid = 0;
+    IEnumerable<TProduct> a = new SelectShopContext().TProducts.Where(x => x.SubCategoryId == spid);
     async Task AddToCart(int productId, int quantity, int mid)
     {
          new fM購物車().add購物車(productId, quantity, mid);
@@ -43,11 +43,11 @@
                     <div class="products-tabs">
                         <!-- tab -->
                         <div id="tab1" class="tab-pane active">
-                            <div class="products-slick" data-nav="#slick-nav-1">
-                                @code {
-                                    int c = 0;
-                                }
+                            <div class="products-slick" data-nav="#slick-nav-1">                              
                                 @{
+                                    while (!new SelectShopContext().TSubCategories.Any(x => x.SubCategoryId == spid))
+                                        spid = new Random().Next(1, 18);
+                                    int c = 0;
                                     foreach (var item in a)
                                     {
                                         c++;
