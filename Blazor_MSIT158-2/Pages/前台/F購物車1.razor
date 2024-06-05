@@ -1,0 +1,230 @@
+﻿@page "/c1"
+@using Blazor_MSIT158_2.Models
+@using Blazor_MSIT158_2.Models.前台
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public int mid { get; set; }
+    SelectShopContext db = new SelectShopContext();
+    fM購物車 cc = new fM購物車();
+    bool sed = false;
+    int 運費 = 100;
+    async Task 刪除(int a)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "確定要刪除嗎?");
+        if (confirmed)
+            cc.delete購物車(a);
+    }
+}
+@{
+    var a = db.TCarts.Where(x => x.MemberId == mid);
+    int b = Convert.ToInt32(a.Sum(x => x.Qty));
+    var c = a.Join(db.TProducts, x => x.ProductId, y => y.ProductId, (x, y) => new { y.ProductPhoto, y.ProductName, y.UnitPrice, y.Stocks, x.Qty, x.CartId, x.Checking });
+    int p = Convert.ToInt32(c.Sum(x => x.Qty * x.UnitPrice));
+    if (!a.All(x => (bool)x.Checking)) sed = false;
+    else sed = true;
+    void 全選()
+    {
+        if (!a.All(x => (bool)x.Checking))
+        {
+            foreach (var v in a)
+            {
+                v.Checking = true;
+            }
+            db.SaveChanges();
+        }
+        else
+        {
+            foreach (var v in a)
+            {
+                v.Checking = false;
+            }
+            db.SaveChanges();
+        }
+    }
+}
+<head>
+    <style>
+        .im2 {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+@* <table class="table table-hover">
+    <tbody>
+        <tr>
+            <td>
+                <input type="checkbox" @onclick="()=>全選()" @bind="sed" />
+            </td>
+            <td>
+                照片
+            </td>
+            <td>
+                商品
+            </td>
+            <td>
+                數量
+            </td>
+            <td>
+                價格
+            </td>
+            <td>
+            </td>
+        </tr>
+        @{
+            foreach (var item in c)
+            {
+                <tr>
+                    <td style="vertical-align: middle;">
+                        @{
+                            bool click = false;
+                            if (item.Checking == null) click = false;
+                            else click = (bool)item.Checking;
+                        }
+                        <input type="checkbox" checked="@click" @onclick="()=>{click=!click;a.FirstOrDefault(x=>x.CartId==item.CartId).Checking=click;db.SaveChanges();}" />
+                    </td>
+                    <td>
+                        @if (item.ProductPhoto != null)
+                        {
+                            <img src="data:image/jpeg;base64,@System.Convert.ToBase64String(item.ProductPhoto)" class="im2">
+                        }
+                    </td>
+                    <td style="vertical-align: middle;">
+                        @item.ProductName
+                    </td>
+                    <td style="vertical-align: middle;">
+                        <input type="button" style="float:left" value="－" class="btn btn-outline-secondary" @onclick='()=>{if(item.Qty<2)return; cc.minus購物車(item.CartId);}' /><label style="float:left">&nbsp;</label>
+                        <input style="width:10%;float:left" id="inputPassword6" class="form-control" aria-describedby="passwordHelpInline" value="@item.Qty"><label style="float:left">&nbsp;</label>
+                        <input type="button" style="float:left" value="＋" class="btn btn-outline-secondary" @onclick='()=>{if(item.Qty>item.Stocks)return; cc.plus購物車(item.CartId);}' />
+                    </td>
+                    <td style="vertical-align: middle;">
+                        @Convert.ToInt32(item.UnitPrice)
+                    </td>
+                    <td style="vertical-align: middle;">
+                        <button type="button" class="btn btn-outline-danger" @onclick="()=>刪除(item.CartId)">刪除</button>
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td>
+                </td>
+                <td style="vertical-align: middle;">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    @b
+                </td>
+                <td style="vertical-align: middle;">
+                    @p
+                </td>
+                <td>
+                    <button type="button" class="btn btn-outline-danger" @onclick='()=>cc.delete所選(mid)'>刪除已選</button>
+                    <button type="button" class="btn btn-warning">結帳</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table> *@
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">照片</th>
+                        <th scope="col">商品</th>
+                        <th scope="col">價格</th>
+                        <th scope="col">數量</th>
+                        <th scope="col">小計</th>
+                        <th scope="col">刪除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        foreach (var item in c)
+                        {
+                            <tr>
+                                <th scope="row">
+                                    <div class="d-flex align-items-center">
+                                        @if (item.ProductPhoto != null)
+                                        {
+                                            <img src="data:image/jpeg;base64,@System.Convert.ToBase64String(item.ProductPhoto)" style="width: 80px; height: 80px;" alt="">
+                                        }
+                                    </div>
+                                </th>
+                                <td>
+                                    <p class="mb-0 mt-4" style="padding-top:13px">@item.ProductName</p>
+                                </td>
+                                <td>
+                                    <p class="mb-0 mt-4" style="padding-top:13px">2.99 $</p>
+                                </td>
+                                <td>
+                                    <div class="input-group quantity mt-4" style="width: 100px;padding-top:6px">
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-sm btn-minus rounded-circle bg-light border" @onclick='()=>{if(item.Qty<2)return; cc.minus購物車(item.CartId);}'>
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm text-center border-0" value="@item.Qty" style="margin-left:4px;">
+                                        <div class="input-group-btn" style="padding-left:8px;">
+                                            <button class="btn btn-sm btn-plus rounded-circle bg-light border" @onclick='()=>{if(item.Qty>item.Stocks)return; cc.plus購物車(item.CartId);}'>
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <p class="mb-0 mt-4" style="padding-top:13px">@Convert.ToInt32(item.UnitPrice)</p>
+                                </td>
+                                <td>
+                                    <div style="padding-top:6px">
+                                        <button class="btn btn-md rounded-circle bg-light border mt-4" @onclick="()=>刪除(item.CartId)">
+                                            <i class="fa fa-times text-danger"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        @*<div class="mt-5">
+            <input type="text" class="border-0 border-bottom rounded me-5 py-3 mb-4" placeholder="Coupon Code">
+             <button class="btn border-secondary rounded-pill px-4 py-3 text-primary" type="button">Apply Coupon</button>
+         </div>*@      
+        <div class="row g-4 justify-content-end">
+            <div class="col-8"></div>
+            <div class="col-sm-8 col-md-7 col-lg-6 col-xl-4">
+                <div class="bg-light rounded">
+                    <div class="p-4">
+                        <h1 class="display-6 mb-4">購物車 <span class="fw-normal">總價</span></h1>
+                        <div class="d-flex justify-content-between mb-4">
+                            <h5 class="mb-0 me-4">小計:</h5>
+                            <p class="mb-0">$@p</p>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0 me-4">運費</h5>
+                            <div class="">
+                                <p class="mb-0">$@運費</p>
+                            </div>
+                        </div>
+                        @*<p class="mb-0 text-end">Shipping to Ukraine.</p>-->*@
+                    </div>
+                    <div class="py-4 mb-4 border-top border-bottom d-flex justify-content-between">
+                        <h5 class="mb-0 ps-4 me-4">總共</h5>
+                        <p class="mb-0 pe-4">$@(p+運費)</p>
+                    </div>
+                    <div style="text-align:right">
+                    <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">選擇運送方式</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,97 @@
+﻿@page "/h1"
+@using Blazor_MSIT158_2.Models
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public int mid { get; set; }
+    // [Parameter]
+    // public EventCallback 重整1 { get; set; }
+    IEnumerable<TProduct> a = new SelectShopContext().TProducts.Where(x=>x.SubCategoryId==2);   
+    async Task AddToCart(int productId, int quantity, int mid)
+    {
+         new fM購物車().add購物車(productId, quantity, mid);
+        await JS.InvokeVoidAsync("alert", "加入購物車成功");
+    }
+}
+
+<!-- SECTION -->
+<div class="section">
+    <!-- container -->
+    <div class="container">
+        <!-- row -->
+        <div class="row">
+
+            <!-- section title -->
+            <div class="col-md-12">
+                <div class="section-title">
+                    <h3 class="title">New Products</h3>
+                    <div class="section-nav">
+                        <ul class="section-tab-nav tab-nav">
+                            <li class="active"><a data-toggle="tab" href="#tab1">Laptops</a></li>
+                            <li><a data-toggle="tab" href="#tab1">Smartphones</a></li>
+                            <li><a data-toggle="tab" href="#tab1">Cameras</a></li>
+                            <li><a data-toggle="tab" href="#tab1">Accessories</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- /section title -->
+            <!-- Products tab & slick -->
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="products-tabs">
+                        <!-- tab -->
+                        <div id="tab1" class="tab-pane active">
+                            <div class="products-slick" data-nav="#slick-nav-1">
+                                @code {
+                                    int c = 0;
+                                }
+                                @{
+                                    foreach (var item in a)
+                                    {
+                                        c++;
+                                        if (c > 10) { break; }
+                                        <!-- product -->
+                                        <div class="product" >
+                                            <a class="product-img" href="#" @onclick='()=>{NavigationManager.NavigateTo($"/p/{mid}/pid/{item.ProductId}");}'>
+                                                <img src="data:image/jpeg;base64,@System.Convert.ToBase64String(item.ProductPhoto)" alt="" style="width:259px;height:259px;object-fit: contain;">
+                                            </a>
+                                            <div class="product-body">
+                                                <p class="product-category">Category</p>
+                                                <h3 class="product-name"><a href="#" @onclick='()=>{NavigationManager.NavigateTo($"/p/{mid}/pid/{item.ProductId}");}'>@item.ProductName</a></h3>
+                                                <h4 class="product-price">$@Convert.ToInt32(item.UnitPrice) <del class="product-old-price">$990.00</del></h4>
+                                                <div class="product-rating">
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                </div>
+                                                <div class="product-btns">
+                                                    <button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
+                                                    <button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
+                                                    <button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
+                                                </div>
+                                            </div>
+                                            <div class="add-to-cart">
+                                                <button class="add-to-cart-btn" @onclick='()=>{ AddToCart(item.ProductId, 1, mid);}'><i class="fa fa-shopping-cart"></i> add to cart</button>
+                                            </div>
+                                        </div>
+                                        <!-- /product -->
+                                    }
+                                }
+                            </div>
+                            <div id="slick-nav-1" class="products-slick-nav"></div>
+                        </div>
+                        <!-- /tab -->
+                    </div>
+                </div>
+            </div>
+            <!-- Products tab & slick -->
+        </div>
+        <!-- /row -->
+    </div>
+    <!-- /container -->
+</div>
+<!-- /SECTION -->

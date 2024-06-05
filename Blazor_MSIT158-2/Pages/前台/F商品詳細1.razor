@@ -1,0 +1,428 @@
+﻿@page "/p1"
+@using Blazor_MSIT158_2.Models
+@using Blazor_MSIT158_2.Models.前台
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+@code {
+	[Parameter]
+	public int pid { get; set; }
+	[Parameter]
+	public int mid { get; set; }
+	int 當前評價頁 = 1;
+	int 評價頁顯示數 = 7;
+	void 換頁(int a){當前評價頁 = a; }
+	int Qty = 1;
+}
+@{
+	SelectShopContext db = new SelectShopContext();
+	TProduct Product = db.TProducts.FirstOrDefault(x => x.ProductId == pid);
+	var 此商品全部評價 = db.TReviews.Where(x => x.ProductId == pid).Join(db.TMembers, x => x.MemberId, y => y.MemberId, (x, y) =>
+	new { x.ReviewDate, x.RankId, x.Comment, y.MemberName });
+	int 評價數 = 此商品全部評價.Count();
+	var 當頁評價 = 此商品全部評價.Skip((當前評價頁 - 1) * 評價頁顯示數).Take(評價頁顯示數);
+	var 商品類別 = db.TSubCategories.Where(x => x.SubCategoryId == Product.SubCategoryId).Join(db.TCategories, x => x.CategoryId, y => y.CategoryId, (x, y) =>
+	new {x.SubCategoryCname,y.CategoryCname,x.SubCategoryId }).FirstOrDefault();
+	IEnumerable<TProduct> 相關商品 = db.TProducts.Where(x=>x.SubCategoryId==商品類別.SubCategoryId).Where(x=>x.ProductId!=pid);
+}
+@{
+	void cm() { if (Qty > 1) { Qty--; } }
+	void cp() { { if (Qty < Product.Stocks) Qty++; } }
+	async Task AddToCart(int productId, int quantity, int mid)
+    {
+         new fM購物車().add購物車(productId, quantity, mid);
+        await JS.InvokeVoidAsync("alert", "加入購物車成功");
+    }
+}
+<div class="section">
+	<!-- container -->
+	<div class="container">
+		<!-- row -->
+		<div class="row">
+			<!-- Product main img -->
+			<div class="col-md-5 col-md-push-2">
+				<div id="product-main-img">					
+					@if (Product.ProductPhoto != null)
+					{
+						<div class="product-preview">
+							<img src="data:image/jpeg;base64,@System.Convert.ToBase64String(Product.ProductPhoto)" alt="">
+						</div>
+					}
+					@* <div class="product-preview">
+						<img src="./img/product03.png" alt="">
+					</div>
+
+					<div class="product-preview">
+						<img src="./img/product06.png" alt="">
+					</div>
+
+					<div class="product-preview">
+						<img src="./img/product08.png" alt="">
+					</div> *@
+				</div>
+			</div>
+			<!-- /Product main img -->
+			<!-- Product thumb imgs -->
+			<div class="col-md-2  col-md-pull-5">
+				<div id="product-imgs">					
+					@if (Product.ProductPhoto != null)
+					{
+						<div class="product-preview">
+							<img src="data:image/jpeg;base64,@System.Convert.ToBase64String(Product.ProductPhoto)" alt="">
+						</div>
+					}
+					@* <div class="product-preview">
+						<img src="./img/product03.png" alt="">
+					</div>
+
+					<div class="product-preview">
+						<img src="./img/product06.png" alt="">
+					</div>
+
+					<div class="product-preview">
+						<img src="./img/product08.png" alt="">
+					</div> *@
+				</div>
+			</div>
+			<!-- /Product thumb imgs -->
+			<!-- Product details -->
+			<div class="col-md-5">
+				<div class="product-details">
+					<h2 class="product-name">@Product.ProductName</h2>
+					<div>
+						<div class="product-rating">							
+							@for (int i = 0; i < 5; i++)
+							{
+								if (i < 此商品全部評價.Average(x=>x.RankId))
+								{
+									<i class="fa fa-star"></i>
+								}
+								else
+								{
+								   <i class="fa fa-star-o empty"></i>
+								}
+							}
+						</div>
+						<a class="review-link" href="#">@此商品全部評價.Count()條評論</a>
+					</div>
+					<div>
+						<h3 class="product-price">$@Convert.ToInt32(Product.UnitPrice)<del class="product-old-price">$990.00</del></h3>
+						<span class="product-available" id="sp1">庫存:@Product.Stocks</span>
+					</div>
+					@* <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p> *@
+
+					@* <div class="product-options">
+						<label>
+							Size
+							<select class="input-select">
+								<option value="0">X</option>
+							</select>
+						</label>
+						<label>
+							Color
+							<select class="input-select">
+								<option value="0">Red</option>
+							</select>
+						</label>
+					</div> *@				
+					<div class="add-to-cart">
+						<div class="qty-label">
+							<div class="input-number">
+								<input type="number" @bind="Qty" id="qty">
+								<span class="qty-up" @onclick="cp" id="up1">+</span>
+								<span class="qty-down" @onclick="cm">-</span>
+								<script>
+									function xx() { 
+										console.log(sp1.innerHTML.replace("庫存:", "").replace("<!--!-->", ""))
+										var a =sp1.innerHTML.replace("庫存:", "").replace("<!--!-->", "")
+										console.log(qty.value)
+										a=Number(a)
+										b=Number(qty.value)
+										if (b >= a) { console.log(a); console.log(b);qty.value=a-1 }
+									}
+									document.getElementById("up1").onclick=xx
+									</script>
+							</div>
+						</div>
+						<button class="add-to-cart-btn" @onclick='()=>{ AddToCart(Product.ProductId,Qty, mid);}'><i class="fa fa-shopping-cart"></i> 加入購物車</button>
+					</div>
+
+					<ul class="product-btns">
+						<li><a href="#"><i class="fa fa-heart-o"></i> 加入收藏</a></li>
+						@* <li><a href="#"><i class="fa fa-exchange"></i> add to compare</a></li> *@
+					</ul>
+
+					<ul class="product-links">
+						<li>分類:</li>
+						<li><a href="#">@商品類別.CategoryCname</a></li>
+						<li><a href="#">@商品類別.SubCategoryCname</a></li>
+					</ul>
+
+					<ul class="product-links">
+						<li>分享:</li>
+						<li><a href="#"><i class="fa fa-facebook"></i></a></li>
+						<li><a href="#"><i class="fa fa-twitter"></i></a></li>
+						<li><a href="#"><i class="fa fa-google-plus"></i></a></li>
+						<li><a href="#"><i class="fa fa-envelope"></i></a></li>
+					</ul>
+
+				</div>
+			</div>
+			<!-- /Product details -->
+			<!-- Product tab -->
+			<div class="col-md-12">
+				<div id="product-tab">
+					<!-- product tab nav -->
+					<ul class="tab-nav">
+						<li class="active"><a data-toggle="tab" href="#tab1">商品介紹</a></li>
+						@* <li><a data-toggle="tab" href="#tab2">Details</a></li> *@
+						<li><a data-toggle="tab" href="#tab3">商品評價 (@此商品全部評價.Count())</a></li>
+					</ul>
+					<!-- /product tab nav -->
+					<!-- product tab content -->
+					<div class="tab-content">
+						<!-- tab1  -->
+						<div id="tab1" class="tab-pane fade in active">
+							<div class="row">
+								<div class="col-md-12">
+									@* <p>@((MarkupString)d)</p> *@
+									<h2>@((MarkupString)new fM通用().改成HTML換行符號(Product.Description))</h2>
+								</div>
+							</div>
+						</div>
+						<!-- /tab1  -->
+						<!-- tab2  -->
+						@* <div id="tab2" class="tab-pane fade in">
+							<div class="row">
+								<div class="col-md-12">
+									<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+								</div>
+							</div>
+						</div> *@
+						<!-- /tab2  -->
+						<!-- tab3  -->
+						<div id="tab3" class="tab-pane fade in">
+							<div class="row">
+								<!-- Rating -->
+								<div class="col-md-3">
+									<div id="rating">
+										<div class="rating-avg">
+											<span>@(Convert.ToInt32(此商品全部評價.Average(x => x.RankId))+1)</span>
+											<div class="rating-stars">
+												@for (int i = 0; i < 5; i++)
+												{
+													if (i < 此商品全部評價.Average(x => x.RankId))
+													{
+														<i class="fa fa-star"></i>
+													}
+													else
+													{
+														<i class="fa fa-star-o empty"></i>
+													}
+												}
+											</div>
+										</div>
+										<ul class="rating">
+											<li>
+												<div class="rating-stars">
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+												</div
+												<div class="rating-progress">
+													<div style="width:@(new fM通用().商品評價百分比(pid,5))%"></div>
+												</div>
+												<span class="sum">@此商品全部評價.Where(x=>x.RankId==5).Count()</span>
+											</li>
+											<li>
+												<div class="rating-stars">
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star-o"></i>
+												</div>
+												<div class="rating-progress">
+													<div style="width:@(new fM通用().商品評價百分比(pid,4))%"></div>
+												</div>
+												<span class="sum">@此商品全部評價.Where(x=>x.RankId==4).Count()</span>
+											</li>
+											<li>
+												<div class="rating-stars">
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+												</div>
+												<div class="rating-progress">
+													<div style="width:@(new fM通用().商品評價百分比(pid,3))%"></div>												
+												</div>
+												<span class="sum">@此商品全部評價.Where(x=>x.RankId==3).Count()</span>
+											</li>
+											<li>
+												<div class="rating-stars">
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+												</div>
+												<div class="rating-progress">
+													<div style="width:@(new fM通用().商品評價百分比(pid,2))%"></div>												
+												</div>
+												<span class="sum">@此商品全部評價.Where(x=>x.RankId==2).Count()</span>
+											</li>
+											<li>
+												<div class="rating-stars">
+													<i class="fa fa-star"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+													<i class="fa fa-star-o"></i>
+												</div>
+													<div class="rating-progress">
+													<div style="width:@(new fM通用().商品評價百分比(pid,1))%"></div>												
+												</div>
+												<span class="sum">@此商品全部評價.Where(x=>x.RankId==1).Count()</span>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<!-- /Rating -->
+								<!-- Reviews -->
+								<div class="col-md-6">
+									<div id="reviews">
+										<ul class="reviews">											
+												@{
+													foreach (var a in 當頁評價)
+													{
+																		<li>
+																			<div class="review-heading">
+																				<h5 class="name">@a.MemberName.Substring(0,1)**</h5>
+																				<p class="date">@a.ReviewDate</p>
+																				<div class="review-rating">
+																					@for (int i = 0; i < 5; i++)
+																{
+                                                                    if (i < a.RankId)
+                                                                    {
+																							<i class="fa fa-star"></i> 																															
+																	}
+																	else
+																	{
+																							<i class="fa fa-star-o empty"></i>
+																	}
+																}																									
+																				</div>
+																			</div>
+																			<div class="review-body">
+																				<p>@a.Comment</p>
+																			</div>
+																		</li>
+												}
+											}											
+										</ul>
+										<ul class="reviews-pagination">
+											@{
+												int f = (評價數 / 評價頁顯示數);
+												if(評價數 % 評價頁顯示數==0&&評價數>=評價頁顯示數){ f += 1; }
+												else { f+= 2; }
+												for (int i = 1; i < f; i++)
+												{
+													var pageIndex = i;
+													if(i==當前評價頁){
+																		<li class="active"><a href="javascript:void(0)" @onclick='()=>{ 換頁(pageIndex);}'>@i</a></li>}
+													else{<li><a href="javascript:void(0)" @onclick='()=>{ 換頁(pageIndex);}'>@i</a></li>}
+												}								
+											}
+											<li><a  @onclick="()=>{if(當前評價頁<(評價數/評價頁顯示數)+1){當前評價頁++;}}"><i class="fa fa-angle-right"></i></a></li>
+										</ul>
+									</div>
+								</div>
+								<!-- /Reviews -->
+								<!-- Review Form -->
+								@* <div class="col-md-3">
+									<div id="review-form">
+										<form class="review-form">
+											<input class="input" type="text" placeholder="Your Name">
+											<input class="input" type="email" placeholder="Your Email">
+											<textarea class="input" placeholder="Your Review"></textarea>
+											<div class="input-rating">
+												<span>Your Rating: </span>
+												<div class="stars">
+													<input id="star5" name="rating" value="5" type="radio"><label for="star5"></label>
+													<input id="star4" name="rating" value="4" type="radio"><label for="star4"></label>
+													<input id="star3" name="rating" value="3" type="radio"><label for="star3"></label>
+													<input id="star2" name="rating" value="2" type="radio"><label for="star2"></label>
+													<input id="star1" name="rating" value="1" type="radio"><label for="star1"></label>
+												</div>
+											</div>
+											<button class="primary-btn">Submit</button>
+										</form>
+									</div>
+								</div> *@
+								<!-- /Review Form -->
+							</div>
+						</div>
+						<!-- /tab3  -->
+					</div>
+					<!-- /product tab content  -->
+				</div>
+			</div>
+			<!-- /product tab -->
+		</div>
+		<!-- /row -->
+	</div>
+	<!-- /container -->
+</div>
+<!-- Section -->
+		<div class="section">
+			<!-- container -->
+			<div class="container">
+				<!-- row -->
+				<div class="row">
+
+					<div class="col-md-12">
+						<div class="section-title text-center">
+							<h3 class="title">相關商品</h3>
+						</div>
+					</div>
+					@{
+									<!-- product -->
+				相關商品 = 相關商品.Take(4);
+				foreach(var v in 相關商品){
+										<div class="col-md-3 col-xs-6">
+											<div class="product">
+												<a class="product-img" @onclick='()=>{NavigationManager.NavigateTo($"/p/{mid}/pid/{v.ProductId}");}'>
+													<img src="data:image/jpeg;base64,@System.Convert.ToBase64String(v.ProductPhoto)" alt=""  style="width:259px;height:259px;object-fit: contain;">
+													<div class="product-label">
+														@* <span class="sale">-30%</span> *@
+													</div>
+												</a>
+												<div class="product-body">
+													<p class="product-category">Category</p>
+													<h3 class="product-name"><a href="#" @onclick='()=>{NavigationManager.NavigateTo($"/fp/{mid}/pid/{v.ProductId}");}'>@v.ProductName</a></h3>
+													<h4 class="product-price">$@Convert.ToInt32(v.UnitPrice) <del class="product-old-price">$990.00</del></h4>
+													<div class="product-rating">
+													</div>
+													<div class="product-btns">
+														<button class="add-to-wishlist"><i class="fa fa-heart-o"></i><span class="tooltipp">add to wishlist</span></button>
+														<button class="add-to-compare"><i class="fa fa-exchange"></i><span class="tooltipp">add to compare</span></button>
+														<button class="quick-view"><i class="fa fa-eye"></i><span class="tooltipp">quick view</span></button>
+													</div>
+												</div>
+												<div class="add-to-cart">
+													<button class="add-to-cart-btn"@onclick='()=>{ AddToCart(v.ProductId,1, mid);}'><i class="fa fa-shopping-cart"></i> 加入購物車</button>
+												</div>
+											</div>
+										</div>
+										<!-- /product -->
+					}}
+				</div>
+				<!-- /row -->
+			</div>
+			<!-- /container -->
+		</div>
+		<!-- /Section -->
